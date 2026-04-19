@@ -1,33 +1,39 @@
 import PropTypes from 'prop-types'
+import { FiAlertTriangle, FiLayers, FiShoppingCart } from 'react-icons/fi'
 import { formatCurrency } from '../utils/formatters'
 
 function SummaryCards({ totalSalesToday, itemsInShortage, totalStockValue }) {
   return (
-    <div className="row g-3 mb-4">
-      <div className="col-12 col-md-4">
-        <div className="card border-0 shadow-sm h-100">
-          <div className="card-body">
-            <h3 className="h6 text-muted">Vendas hoje</h3>
-            <p className="display-6 mb-0">{totalSalesToday}</p>
-          </div>
+    <div className="lume-summary-grid">
+      <article className="lume-summary-card">
+        <div className="lume-summary-card__head">
+          <h3 className="lume-summary-card__title">Vendas hoje</h3>
+          <span className="lume-summary-card__icon lume-summary-card__icon--orange" aria-hidden>
+            <FiShoppingCart />
+          </span>
         </div>
-      </div>
-      <div className="col-12 col-md-4">
-        <div className="card border-0 shadow-sm h-100">
-          <div className="card-body">
-            <h3 className="h6 text-muted">Itens em falta</h3>
-            <p className="display-6 mb-0">{itemsInShortage}</p>
-          </div>
+        <p className="lume-summary-card__value">{totalSalesToday}</p>
+      </article>
+
+      <article className="lume-summary-card">
+        <div className="lume-summary-card__head">
+          <h3 className="lume-summary-card__title">Itens em falta</h3>
+          <span className="lume-summary-card__icon lume-summary-card__icon--danger" aria-hidden>
+            <FiAlertTriangle />
+          </span>
         </div>
-      </div>
-      <div className="col-12 col-md-4">
-        <div className="card border-0 shadow-sm h-100">
-          <div className="card-body">
-            <h3 className="h6 text-muted">Valor total em estoque</h3>
-            <p className="display-6 mb-0">{formatCurrency(totalStockValue)}</p>
-          </div>
+        <p className="lume-summary-card__value">{itemsInShortage}</p>
+      </article>
+
+      <article className="lume-summary-card">
+        <div className="lume-summary-card__head">
+          <h3 className="lume-summary-card__title">Valor total em estoque</h3>
+          <span className="lume-summary-card__icon lume-summary-card__icon--sage" aria-hidden>
+            <FiLayers />
+          </span>
         </div>
-      </div>
+        <p className="lume-summary-card__value">{formatCurrency(totalStockValue)}</p>
+      </article>
     </div>
   )
 }

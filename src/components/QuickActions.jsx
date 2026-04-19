@@ -2,22 +2,31 @@ import PropTypes from 'prop-types'
 
 function QuickActions({ onOpenSale, onOpenStock, onOpenProduct }) {
   return (
-    <div className="card border-0 shadow-sm mb-4">
-      <div className="card-body">
-        <h2 className="h5 mb-3">Acoes rapidas</h2>
-        <div className="d-flex flex-wrap gap-2">
-          <button type="button" className="btn btn-primary" onClick={onOpenSale}>
-            + Venda
-          </button>
-          <button type="button" className="btn btn-outline-primary" onClick={onOpenStock}>
-            + Entrada
-          </button>
-          <button type="button" className="btn btn-outline-secondary" onClick={onOpenProduct}>
-            + Produto
-          </button>
-        </div>
+    <section aria-labelledby="quick-actions-title">
+      <h2 id="quick-actions-title" className="lume-section-title">
+        Ações rápidas
+      </h2>
+      <div className="lume-actions">
+        <button type="button" className="lume-btn lume-btn--primary" onClick={onOpenSale}>
+          <span className="lume-btn__plus" aria-hidden>
+            +
+          </span>
+          Venda
+        </button>
+        <button type="button" className="lume-btn lume-btn--outline" onClick={onOpenStock}>
+          <span className="lume-btn__plus" aria-hidden>
+            +
+          </span>
+          Entrada
+        </button>
+        <button type="button" className="lume-btn lume-btn--outline" onClick={onOpenProduct}>
+          <span className="lume-btn__plus" aria-hidden>
+            +
+          </span>
+          Produto
+        </button>
       </div>
-    </div>
+    </section>
   )
 }
 

@@ -1,22 +1,42 @@
-import { FiWifi } from 'react-icons/fi'
+import { FiAlertTriangle, FiBox, FiWifi } from 'react-icons/fi'
+import { useAppContext } from '../hooks/useAppContext'
 
 function AppNavbar() {
-  return (
-    <nav className="navbar navbar-expand-lg bg-white border-bottom">
-      <div className="container">
-        <span className="navbar-brand fw-semibold">
-          <span className="text-primary me-2">Lume</span>
-          Dashboard
-        </span>
+  const { alerts } = useAppContext()
+  const criticalCount = alerts.filter((a) => a.level === 'danger').length
 
-        <div className="d-flex align-items-center gap-2 ms-auto">
-          <span className="badge text-bg-success d-inline-flex align-items-center gap-1">
-            <FiWifi />
+  return (
+    <header className="lume-nav">
+      <div className="lume-nav__inner">
+        <div className="lume-brand">
+          <span className="lume-brand__mark" aria-hidden>
+            <FiBox strokeWidth={2.2} />
+          </span>
+          <div className="lume-brand__titles">
+            <span className="lume-brand__name">Lume</span>
+            <span className="lume-brand__subtitle">Dashboard</span>
+          </div>
+        </div>
+
+        <div className="lume-nav__badges">
+          {criticalCount > 0 ? (
+            <span className="lume-badge lume-badge--critical">
+              <FiAlertTriangle aria-hidden />
+              {criticalCount === 1 ? '1 alerta crítico' : `${criticalCount} alertas críticos`}
+            </span>
+          ) : (
+            <span className="lume-badge lume-badge--critical-muted">
+              <FiAlertTriangle aria-hidden />
+              Nenhum alerta crítico
+            </span>
+          )}
+          <span className="lume-badge lume-badge--online">
+            <FiWifi aria-hidden />
             Online
           </span>
         </div>
       </div>
-    </nav>
+    </header>
   )
 }
 

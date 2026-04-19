@@ -1,23 +1,23 @@
 import PropTypes from 'prop-types'
+import { FiAlertTriangle } from 'react-icons/fi'
 
 function AlertList({ alerts }) {
   if (!alerts.length) {
-    return (
-      <div className="alert alert-success mb-4" role="alert">
-        Estoque em dia. Nenhum alerta no momento.
-      </div>
-    )
+    return null
   }
 
+  const critical = alerts.filter((a) => a.level === 'danger')
+  const names = critical.length ? critical.map((a) => a.productName).join(', ') : alerts.map((a) => a.productName).join(', ')
+
   return (
-    <div className="d-grid gap-2 mb-4">
-      {alerts.map((alert) => (
-        <div key={alert.productId} className={`alert alert-${alert.level} mb-0`} role="alert">
-          {alert.level === 'danger'
-            ? `Estoque critico: ${alert.productName}`
-            : `Estoque baixo: ${alert.productName}`}
-        </div>
-      ))}
+    <div className="lume-banner" role="status">
+      <FiAlertTriangle aria-hidden />
+      <p>
+        <strong>Mantenha os níveis de estoque.</strong>{' '}
+        {critical.length > 0
+          ? `Itens em situação crítica: ${names}.`
+          : `Há produtos abaixo do mínimo: ${names}.`}
+      </p>
     </div>
   )
 }
