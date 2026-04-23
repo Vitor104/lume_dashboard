@@ -19,9 +19,11 @@ function DashboardPage() {
     sales,
     alerts,
     loading,
+    loadError,
     registerSale,
     addStockEntry,
     addProduct,
+    retryLoadData,
   } = useAppContext()
 
   const [modal, setModal] = useState(null)
@@ -39,6 +41,30 @@ function DashboardPage() {
         <AppNavbar />
         <div className="lume-loading">
           <div className="lume-panel">Carregando dados iniciais…</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className="lume-dashboard">
+        <AppNavbar />
+        <div className="lume-main">
+          <div className="lume-container">
+            <div className="lume-panel" role="alert">
+              <h2 className="h5">Erro ao carregar</h2>
+              <p className="text-muted mb-3">{loadError}</p>
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ backgroundColor: 'var(--lume-orange)', borderColor: 'var(--lume-orange)' }}
+                onClick={() => retryLoadData()}
+              >
+                Tentar novamente
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     )
