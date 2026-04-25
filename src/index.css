@@ -331,7 +331,6 @@ body {
   border: 1px solid transparent;
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
-  z-index: 9999;
 }
 
 .lume-btn:active {
