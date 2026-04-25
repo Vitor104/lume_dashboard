@@ -126,6 +126,7 @@ function AppNavbar() {
             className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
             onClick={(e) => {
               e.preventDefault();
+              alert("O toque funcionou!");
               handleSignOut();
             }}
             
