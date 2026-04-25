@@ -124,7 +124,11 @@ function AppNavbar() {
           <button
             type="button"
             className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
-            onClick={handleSignOut}
+            oonClick={(e) => {
+              e.preventDefault();
+              handleSignOut();
+            }}
+            
           >
             <FiLogOut aria-hidden />
             Sair
