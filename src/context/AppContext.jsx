@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useReducer } from 'react'
-import { v4 as uuidv4 } from 'uuid'
+import { useNavigate } from 'react-router-dom'
 import { AppContext } from './AppContextInstance'
 import { useAlerts } from '../hooks/useAlerts'
-import { api } from '../services/api'
+import { api, isAuthFailure } from '../services/api'
 
 const initialState = {
   user: null,
@@ -38,29 +38,32 @@ function appReducer(state, action) {
         loadError: action.payload,
         loading: false,
       }
-    case 'ADD_SALE':
+    case 'SET_SALES':
       return {
         ...state,
-        products: state.products.map((product) => (
-          product.id === action.payload.productId
-            ? { ...product, stock: product.stock - action.payload.quantity }
-            : product
-        )),
-        sales: [...state.sales, action.payload],
-      }
-    case 'ADD_STOCK_ENTRY':
-      return {
-        ...state,
-        products: state.products.map((product) => (
-          product.id === action.payload.productId
-            ? { ...product, stock: product.stock + action.payload.quantity }
-            : product
-        )),
+        sales: action.payload,
       }
     case 'ADD_PRODUCT':
       return {
         ...state,
         products: [...state.products, action.payload],
+      }
+    case 'SET_PRODUCTS':
+      return {
+        ...state,
+        products: action.payload,
+      }
+    case 'UPDATE_PRODUCT':
+      return {
+        ...state,
+        products: state.products.map((product) => (
+          product.id === action.payload.id ? action.payload : product
+        )),
+      }
+    case 'REMOVE_PRODUCT':
+      return {
+        ...state,
+        products: state.products.filter((product) => product.id !== action.payload),
       }
     default:
       return state
@@ -68,8 +71,20 @@ function appReducer(state, action) {
 }
 
 export function AppProvider({ children }) {
+  const navigate = useNavigate()
   const [state, dispatch] = useReducer(appReducer, initialState)
   const alerts = useAlerts(state.products)
+
+  const redirectToLoginIfAuthError = useCallback(
+    (err) => {
+      if (isAuthFailure(err)) {
+        navigate('/login', { replace: true })
+        return true
+      }
+      return false
+    },
+    [navigate],
+  )
 
   const loadData = useCallback(async () => {
     dispatch({ type: 'LOADING_START' })
@@ -78,18 +93,18 @@ export function AppProvider({ children }) {
       if (data) {
         dispatch({ type: 'INIT_DATA', payload: data })
       } else {
-        dispatch({
-          type: 'LOAD_ERROR',
-          payload: 'Sessão inválida ou expirada. Inicie sessão novamente.',
-        })
+        navigate('/login', { replace: true })
       }
     } catch (err) {
+      if (redirectToLoginIfAuthError(err)) {
+        return
+      }
       dispatch({
         type: 'LOAD_ERROR',
         payload: err?.message || 'Não foi possível carregar os dados.',
       })
     }
-  }, [])
+  }, [navigate, redirectToLoginIfAuthError])
 
   useEffect(() => {
     loadData()
@@ -98,23 +113,33 @@ export function AppProvider({ children }) {
   const actions = useMemo(
     () => ({
       registerSale: async ({ productId, quantity }) => {
-        const sale = {
-          id: uuidv4(),
-          productId,
-          quantity,
-          timestamp: Date.now(),
-        }
-
         const product = state.products.find((item) => item.id === productId)
         if (!product || quantity <= 0 || quantity > product.stock) {
           return { success: false, message: 'Quantidade de venda invalida.' }
         }
 
-        await api.saveSale(sale)
-        await api.updateProductStock(productId, product.stock - quantity)
-        dispatch({ type: 'ADD_SALE', payload: sale })
-
-        return { success: true }
+        try {
+          await api.registerStockMovement({
+            p_product_id: productId,
+            p_movement_type: 'sale',
+            p_quantity: quantity,
+          })
+          const updated = await api.getProductById(productId)
+          const sales = await api.getSales()
+          if (updated) {
+            dispatch({ type: 'UPDATE_PRODUCT', payload: updated })
+          }
+          dispatch({ type: 'SET_SALES', payload: sales })
+          return { success: true }
+        } catch (err) {
+          if (redirectToLoginIfAuthError(err)) {
+            return { success: false, message: 'Sessão expirada.' }
+          }
+          return {
+            success: false,
+            message: err?.message || 'Não foi possível registar a venda.',
+          }
+        }
       },
       addStockEntry: async ({ productId, quantity }) => {
         const product = state.products.find((item) => item.id === productId)
@@ -122,26 +147,103 @@ export function AppProvider({ children }) {
           return { success: false, message: 'Entrada invalida.' }
         }
 
-        await api.updateProductStock(productId, product.stock + quantity)
-        dispatch({ type: 'ADD_STOCK_ENTRY', payload: { productId, quantity } })
-
-        return { success: true }
+        try {
+          await api.registerStockMovement({
+            p_product_id: productId,
+            p_movement_type: 'restock',
+            p_quantity: quantity,
+          })
+          const updated = await api.getProductById(productId)
+          if (updated) {
+            dispatch({ type: 'UPDATE_PRODUCT', payload: updated })
+          }
+          return { success: true }
+        } catch (err) {
+          if (redirectToLoginIfAuthError(err)) {
+            return { success: false, message: 'Sessão expirada.' }
+          }
+          return {
+            success: false,
+            message: err?.message || 'Não foi possível registar a entrada de stock.',
+          }
+        }
       },
-      addProduct: ({ name, unit, minStockLimit, stock, pricePerUnit }) => {
-        const product = {
-          id: uuidv4(),
-          name: name.trim(),
-          unit,
-          minStockLimit,
-          stock,
-          pricePerUnit,
+      addProduct: async ({ name, unit, minStockLimit, stock, pricePerUnit }) => {
+        const userId = state.user?.id
+        if (!userId) {
+          navigate('/login', { replace: true })
+          return { success: false, message: 'Sessão inválida. Inicie sessão novamente.' }
         }
 
-        dispatch({ type: 'ADD_PRODUCT', payload: product })
+        try {
+          const product = await api.createProduct({
+            user_id: userId,
+            name: name.trim(),
+            current_stock: stock,
+            unit,
+            min_stock_limit: minStockLimit,
+            price_per_unit: pricePerUnit,
+          })
+          dispatch({ type: 'ADD_PRODUCT', payload: product })
+          return { success: true }
+        } catch (err) {
+          if (redirectToLoginIfAuthError(err)) {
+            return { success: false, message: 'Sessão expirada.' }
+          }
+          return {
+            success: false,
+            message: err?.message || 'Não foi possível criar o produto.',
+          }
+        }
+      },
+      refreshProducts: async () => {
+        try {
+          const products = await api.getProducts()
+          dispatch({ type: 'SET_PRODUCTS', payload: products })
+          return { success: true }
+        } catch (err) {
+          if (redirectToLoginIfAuthError(err)) {
+            return { success: false, message: 'Sessão expirada.' }
+          }
+          return {
+            success: false,
+            message: err?.message || 'Não foi possível atualizar a lista de produtos.',
+          }
+        }
+      },
+      updateProduct: async (id, partial) => {
+        try {
+          const product = await api.updateProduct(id, partial)
+          dispatch({ type: 'UPDATE_PRODUCT', payload: product })
+          return { success: true }
+        } catch (err) {
+          if (redirectToLoginIfAuthError(err)) {
+            return { success: false, message: 'Sessão expirada.' }
+          }
+          return {
+            success: false,
+            message: err?.message || 'Não foi possível atualizar o produto.',
+          }
+        }
+      },
+      deleteProduct: async (id) => {
+        try {
+          await api.deleteProduct(id)
+          dispatch({ type: 'REMOVE_PRODUCT', payload: id })
+          return { success: true }
+        } catch (err) {
+          if (redirectToLoginIfAuthError(err)) {
+            return { success: false, message: 'Sessão expirada.' }
+          }
+          return {
+            success: false,
+            message: err?.message || 'Não foi possível eliminar o produto.',
+          }
+        }
       },
       retryLoadData: loadData,
     }),
-    [state.products, loadData],
+    [state.products, state.user?.id, loadData, navigate, redirectToLoginIfAuthError],
   )
 
   const value = useMemo(

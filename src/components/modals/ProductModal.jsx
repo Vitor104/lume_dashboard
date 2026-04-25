@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const initialForm = {
   name: '',
@@ -11,24 +11,45 @@ const initialForm = {
 
 function ProductModal({ show, onClose, onSubmit }) {
   const [form, setForm] = useState(initialForm)
+  const [submitError, setSubmitError] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (show) {
+      setSubmitError(null)
+      setSubmitting(false)
+    }
+  }, [show])
 
   if (!show) {
     return null
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
+    setSubmitError(null)
+    setSubmitting(true)
 
-    onSubmit({
-      name: form.name,
-      unit: form.unit,
-      minStockLimit: Number(form.minStockLimit),
-      stock: Number(form.stock),
-      pricePerUnit: Number(form.pricePerUnit),
-    })
+    try {
+      const result = await onSubmit({
+        name: form.name,
+        unit: form.unit,
+        minStockLimit: Number(form.minStockLimit),
+        stock: Number(form.stock),
+        pricePerUnit: Number(form.pricePerUnit),
+      })
 
-    setForm(initialForm)
-    onClose()
+      if (result?.success) {
+        setForm(initialForm)
+        onClose()
+      } else {
+        setSubmitError(result?.message || 'Não foi possível guardar o produto.')
+      }
+    } catch (err) {
+      setSubmitError(err?.message || 'Não foi possível guardar o produto.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -41,6 +62,11 @@ function ProductModal({ show, onClose, onSubmit }) {
               <button type="button" className="btn-close" onClick={onClose}></button>
             </div>
             <div className="modal-body d-grid gap-3">
+              {submitError ? (
+                <div className="alert alert-danger mb-0" role="alert">
+                  {submitError}
+                </div>
+              ) : null}
               <div>
                 <label className="form-label">Nome</label>
                 <input
@@ -103,8 +129,8 @@ function ProductModal({ show, onClose, onSubmit }) {
               <button type="button" className="btn btn-outline-secondary" onClick={onClose}>
                 Cancelar
               </button>
-              <button type="submit" className="btn btn-primary">
-                Salvar produto
+              <button type="submit" className="btn btn-primary" disabled={submitting}>
+                {submitting ? 'A guardar…' : 'Salvar produto'}
               </button>
             </div>
           </form>
