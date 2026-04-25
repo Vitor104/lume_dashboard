@@ -126,7 +126,6 @@ function AppNavbar() {
             className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 lume-nav__badges"
             onClick={(e) => {
               e.preventDefault();
-              alert("O toque funcionou!");
               handleSignOut();
             }}
 
