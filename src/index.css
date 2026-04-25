@@ -123,7 +123,15 @@ body {
 
 .lume-nav__alerts-mobile {
   display: none;
-  position: relative;
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%); 
+  z-index: 1050;
+  width: 90%; 
+  max-width: 400px; 
+
+  gap: 10px;
 }
 
 @media (max-width: 639px) {
@@ -141,6 +149,8 @@ body {
   display: grid;
   place-items: center;
   width: 40px;
+  bottom: 5px;
+  left: 60%;
   height: 40px;
   padding: 0;
   border: 1px solid var(--lume-border);
