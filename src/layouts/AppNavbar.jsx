@@ -129,6 +129,12 @@ function AppNavbar() {
               alert("O toque funcionou!");
               handleSignOut();
             }}
+
+            onTouchEnd={(e) => {
+              // onTouchEnd é o evento nativo de celular, dispara no exato milissegundo que você tira o dedo da tela
+              e.preventDefault();
+              handleSignOut();
+            }}
             
           >
             <FiLogOut aria-hidden />
