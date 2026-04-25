@@ -124,7 +124,7 @@ function AppNavbar() {
           <button
             type="button"
             className="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1"
-            oonClick={(e) => {
+            onClick={(e) => {
               e.preventDefault();
               handleSignOut();
             }}
