@@ -112,7 +112,7 @@ body {
   justify-content: flex-end;
   gap: 8px;
   position: relative;
-  z-index: 9999;
+  z-index: 99999;
 }
 
 .lume-nav__alerts-desktop {
