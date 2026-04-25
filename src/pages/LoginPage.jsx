@@ -56,7 +56,7 @@ function LoginPage() {
           </span>
           <h1 className="lume-auth__title">Lume</h1>
           <p className="lume-auth__subtitle">
-            Entre para aceder ao dashboard de stock.
+          Gerencie seu estoque com inteligência e previsibilidade..
           </p>
         </div>
 
